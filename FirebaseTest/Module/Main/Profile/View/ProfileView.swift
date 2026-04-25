@@ -6,15 +6,19 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ProfileView: View {
     @EnvironmentObject var authVM: AuthViewModel
+    @State private var showImagePicker: Bool = false
+    @State private var selectedImage: UIImage?
     @StateObject private var profileVM = ProfileViewModel(service: ProfileFireStoreService())
     var body: some View {
         NavigationStack{
             VStack{
                 ProfileHeaderView(profileVM:profileVM) {
-                    
+                    //show image picker
+                    self.showImagePicker = true
                 }
                 VStack(alignment:.leading){
                     Text("Stats")
@@ -55,6 +59,21 @@ struct ProfileView: View {
                     if self.profileVM.isLoading{
                         ProgressView()
                             .tint(.yellow)
+                            .frame(width: 200, height: 200)
+                            .background(Color.lightGray)
+                            .clipShape(RoundedRectangle(cornerRadius: 8.0))
+                            
+                    }
+                }
+                .sheet(isPresented: $showImagePicker) {
+                    ImagePicker(selectedImage: $selectedImage)
+                }
+                .onChange(of: self.selectedImage ?? UIImage()) { oldValue, newValue in
+                    print(newValue)
+                    Task{
+                        if let imageData = newValue.jpegData(compressionQuality: 0.5){
+                           await self.profileVM.uploadProfileImage(id: self.authVM.getCurrentUserId(), imageData: imageData)
+                        }
                     }
                 }
         }

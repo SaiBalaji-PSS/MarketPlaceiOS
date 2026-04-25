@@ -14,8 +14,8 @@ struct ProfileHeaderView: View {
     
     var body: some View {
         HStack{
-            if showImage == false{
-                AsyncImage(url: URL(string: "https://upload.wikimedia.org/wikipedia/commons/4/45/MontreGousset001.jpg")) { image in
+            if let profileImageUrl = profileVM.userData?.profileImageUrl, profileImageUrl.isEmpty == false{
+                AsyncImage(url: URL(string: profileImageUrl)) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)

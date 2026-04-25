@@ -35,6 +35,24 @@ class ProfileViewModel: ObservableObject{
             self.message = error.localizedDescription
         }
     }
+    
+    func uploadProfileImage(id: String,imageData: Data)async {
+        defer{
+            isLoading = false
+        }
+        isLoading = true 
+        do{
+            let fileUrl = try await service.uploadProfileImage(id: id, imageData: imageData)
+            print(fileUrl)
+            try await service.updateProfileImageURLInDB(id: id, url: fileUrl.absoluteString)
+            self.userData = try await service.fetchUserData(id: id)
+        }
+        catch{
+            print(error)
+            self.showMessage = true
+            self.message = error.localizedDescription
+        }
+    }
 }
 
 extension Date{
