@@ -1,0 +1,53 @@
+//
+//  FirebaseAuthService.swift
+//  FirebaseTest
+//
+//  Created by Sai Balaji on 24/04/26.
+//
+
+import Foundation
+import FirebaseAuth
+import FirebaseFirestore
+
+
+class FirebaseAuthService: AuthServiceProtocol{
+  
+    var collectionName: String = "users"
+    func signIn(email: String, password: String) async throws -> String{
+        let result = try await Auth.auth().signIn(withEmail: email, password: password)
+        return result.user.uid
+    }
+    func signUp(email: String, password: String) async throws -> String {
+        let result = try await Auth.auth().createUser(withEmail: email, password: password)
+        return result.user.uid
+    }
+    func signOut() throws {
+        try  Auth.auth().signOut()
+    }
+    
+    func getCurrentSignedInUserId() -> String? {
+        return Auth.auth().currentUser?.uid
+    }
+    
+    
+    func uploadUserData(user: User) async throws -> String {
+        guard let id = user.id else{throw NSError(domain: "Missing Id", code: 0) }
+        let db = Firestore.firestore()
+        
+        try  await db.collection(collectionName)
+            .document(id)
+            .setData([
+                "email": user.email,
+                "user_name": user.userName,
+                "created_at": user.createdAt,
+                "profile_image_url": user.profileImageUrl ?? "",
+                "total_sales": user.totalSales,
+                "items_sold_count": user.itemsSold,
+                "items_purchased_count": user.itemsPurchased
+                
+            ], merge: true)
+
+        return id
+    }
+   
+}
