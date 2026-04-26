@@ -9,32 +9,43 @@ import SwiftUI
 import UIKit
 
 struct CreateListingView: View {
+    enum Field: CaseIterable{
+        case productName
+        case description
+        case quantity
+        case price
+    }
+    
     let listingId = UUID().uuidString
-    @State private var productName: String = ""
-    @State private var quantity: String = ""
-    @State private var price: Double = 0.0
     @Environment(\.locale) var locale
     @EnvironmentObject var authVM: AuthViewModel
-    @State private var productImages = [UIImage]()
-    @State private var productImageData = [Data]()
-    
     @State private var showImagePicker: Bool = false
-    @State private var selectedImage: UIImage?
     @StateObject private var createListingVM = CreateListingViewModel(service: CreateListingService())
+    @FocusState private var selectedField: Field?
+    @State private var fields = Field.allCases
+    @State private var currentFieldIndex = 0
     
     var body: some View {
         NavigationStack{
             Form{
                 Section("Product Name"){
-                    TextField("", text: $productName)
+                    TextField("", text: $createListingVM.productName)
+                        .focused($selectedField, equals: Field.productName)
+                }
+                Section("Product Description"){
+                    TextField("", text: $createListingVM.productDescription)
+                        .frame(height:200)
+                        .focused($selectedField, equals: Field.description)
                 }
                 Section("Quantity"){
-                    TextField("", text: $quantity)
+                    TextField("", text: $createListingVM.quantity)
                         .keyboardType(.numberPad)
+                        .focused($selectedField, equals: Field.quantity)
                 }
                 Section("Price"){
-                    TextField("",value: $price,format: .currency(code: locale.currency?.identifier ?? "USD"))
+                    TextField("",value:  $createListingVM.price,format: .currency(code: locale.currency?.identifier ?? "USD"))
                         .keyboardType(.decimalPad)
+                        .focused($selectedField, equals: Field.price)
                 }
                 Section("Product Images"){
                     HStack{
@@ -47,7 +58,9 @@ struct CreateListingView: View {
                    
                         ScrollView(.horizontal){
                             LazyHStack{
-                                ForEach(productImages,id:\.self){ image in
+                                ForEach(createListingVM.productImages.indices, id: \.self) { index in
+                                    let image = createListingVM.productImages[index]
+                                    
                                     ProductImageCell(image: image) {
                                         self.deleteImage(image)
                                     }
@@ -59,8 +72,12 @@ struct CreateListingView: View {
                     }
                 }
                 
-                Section("Pick up Location"){
-                    
+                Section("Category"){
+                    Picker("Category", selection: $createListingVM.selectedCategory) {
+                        ForEach(createListingVM.category,id:\.self){ category in
+                            Text(category)
+                        }
+                    }
                 }
                 
                 HStack{
@@ -72,16 +89,39 @@ struct CreateListingView: View {
                     }
                     Spacer()
                 }
+             
+            }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                      Button("Up") {
+                          currentFieldIndex = (currentFieldIndex + 1) % fields.count
+                          selectedField = fields[currentFieldIndex]
+                      }
+
+                      Button("Down") {
+                          currentFieldIndex = max(0, currentFieldIndex - 1)
+                          selectedField = fields[currentFieldIndex]
+                      }
+
+                      Spacer()
+
+                      Button("Done") {
+                          selectedField = nil
+                      }
+                  }
             }
             .sheet(isPresented: $showImagePicker, content: {
-                ImagePicker(selectedImage: $selectedImage)
+                ImagePicker(selectedImage:  $createListingVM.selectedImage)
             })
-            .onChange(of: selectedImage ?? UIImage(), { oldValue, newValue in
-                self.productImages.append(newValue)
-                if let imageData = newValue.jpegData(compressionQuality: 0.5){
-                    self.productImageData.append(imageData)
+            .onChange(of: createListingVM.selectedImage) { oldValue, newValue in
+                guard let newValue = newValue else { return }
+
+                createListingVM.productImages.append(newValue)
+
+                if let imageData = newValue.jpegData(compressionQuality: 0.5) {
+                    createListingVM.productImageData.append(imageData)
                 }
-            })
+            }
             .alert("Info", isPresented: $createListingVM.shouldShowAlert, actions: {
                 Button("OK"){
                     
@@ -95,18 +135,21 @@ struct CreateListingView: View {
                         .tint(.green)
                 }
             })
+            .onAppear(perform: {
+                
+            })
             .navigationTitle("Add Listing")
         }
     }
     
     private func deleteImage(_ image: UIImage) {
-        if let index = productImages.firstIndex(of: image) {
-            productImages.remove(at: index)
+        if let index = self.createListingVM.productImages.firstIndex(of: image) {
+            self.createListingVM.productImages.remove(at: index)
         }
     }
     
     private func uploadListing()async {
-        await self.createListingVM.uploadListing(listing: ListingModel(listingId: self.listingId, sellerId: self.authVM.getCurrentUserId(), productName: self.productName, quantity: Int(self.quantity) ?? 0, price: self.price, imageUrls: [], createdDate: Date()),imageData: self.productImageData)
+        await self.createListingVM.uploadListing(listing: ListingModel(listingId: self.listingId, sellerId: self.authVM.getCurrentUserId(), productName: self.createListingVM.productName,productDescription: self.createListingVM.productDescription, quantity: Int(self.createListingVM.quantity) ?? 0, price: self.createListingVM.price, imageUrls: [], category: self.createListingVM.selectedCategory, createdDate: Date()),imageData: self.createListingVM.productImageData)
     }
 }
 

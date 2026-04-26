@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import UIKit
 
 @MainActor
 class CreateListingViewModel: ObservableObject{
@@ -23,9 +24,26 @@ class CreateListingViewModel: ObservableObject{
     @Published var createListingState: CreateListingState = .idle
     @Published var shouldShowAlert: Bool = false
     @Published var message: String = ""
+    @Published var category = ["Electronics","Clothes","Automobile","Others","Hardware"]
+    @Published var selectedCategory: String = "Others"
+    @Published var productName: String = ""
+    @Published var productDescription: String = ""
+    @Published var quantity: String = ""
+    @Published var price: Double = 0.0
+    @Published var productImages = [UIImage]()
+    @Published var productImageData = [Data]()
+    @Published var selectedImage: UIImage?
+    
+    
+    
+    
     
     init(service: CreateListingService) {
         self.service = service
+    }
+    
+    func resetStates(){
+        
     }
     
     func uploadListing(listing: ListingModel,imageData:[Data])async{
