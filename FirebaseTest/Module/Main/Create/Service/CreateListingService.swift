@@ -36,13 +36,29 @@ class CreateListingService: CreateListingProtocol{
         
         let folderName = "listing_images"
         let subFolderName = "\(listingId)"
-        for (index,data) in imageData.enumerated(){
-            let fileRef = storage.reference().child("\(folderName)/\(subFolderName)/\(index).jpeg")
-            let _ = try await fileRef.putDataAsync(data)
-            let fileBucketUrl = try await fileRef.downloadURL()
-            imageBucketUrls.append(fileBucketUrl.absoluteString)
+        //swift structured concurrency to fire all the image upload calls parallely
+        try await withThrowingTaskGroup(of:String.self){ group in
+            for (index,data) in imageData.enumerated(){
+                group.addTask{
+                    let fileRef = self.storage.reference().child("\(folderName)/\(subFolderName)/\(index).jpeg")
+                    let _ = try await fileRef.putDataAsync(data)
+                    let fileBucketUrl = try await fileRef.downloadURL()
+                    return fileBucketUrl.absoluteString
+                }
+            }
+            for try await fileUrlString in group{
+                imageBucketUrls.append(fileUrlString)
+            }
         }
         return imageBucketUrls
+        
+//        for (index,data) in imageData.enumerated(){
+//            let fileRef = storage.reference().child("\(folderName)/\(subFolderName)/\(index).jpeg")
+//            let _ = try await fileRef.putDataAsync(data)
+//            let fileBucketUrl = try await fileRef.downloadURL()
+//            imageBucketUrls.append(fileBucketUrl.absoluteString)
+//        }
+//        return imageBucketUrls
     }
     func deleteListingImages(listingId: String?) async throws {
         guard let listingId = listingId else{throw NSError(domain: "Invalid listing id", code: 0)}

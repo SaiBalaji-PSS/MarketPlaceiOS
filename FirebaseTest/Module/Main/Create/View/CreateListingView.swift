@@ -59,6 +59,10 @@ struct CreateListingView: View {
                     }
                 }
                 
+                Section("Pick up Location"){
+                    
+                }
+                
                 HStack{
                     Spacer()
                     Button("Save"){

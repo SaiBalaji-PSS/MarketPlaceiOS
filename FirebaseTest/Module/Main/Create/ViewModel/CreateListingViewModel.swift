@@ -30,7 +30,9 @@ class CreateListingViewModel: ObservableObject{
     
     func uploadListing(listing: ListingModel,imageData:[Data])async{
         
-        
+        if self.performValidation(listing: listing) == false{
+            return
+        }
         defer{
             self.createListingState = .idle
         }
@@ -57,6 +59,25 @@ class CreateListingViewModel: ObservableObject{
                 
             }
         }
+    }
+    
+    func performValidation(listing: ListingModel) -> Bool{
+        if listing.productName.isEmpty{
+            self.shouldShowAlert = true
+            self.message = "Product name cannot be empty"
+            return false
+        }
+        if listing.quantity == 0{
+            self.shouldShowAlert = true
+            self.message = "Invalid quantity value"
+            return false
+        }
+        if listing.price == 0.0{
+            self.shouldShowAlert = true
+            self.message = "Invalid price value"
+            return false
+        }
+        return true
     }
     
     
