@@ -15,7 +15,7 @@ struct MainTabbar: View {
                 Text("Home")
             }
             Tab("Sell",systemImage: "bag"){
-                Text("Selling")
+                CreateListingView()
             }
             Tab("Notifications",systemImage: "heart"){
                 Text("Notification")
