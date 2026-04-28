@@ -15,8 +15,7 @@ struct CreateListingView: View {
         case quantity
         case price
     }
-    
-    let listingId = UUID().uuidString
+
     @Environment(\.locale) var locale
     @EnvironmentObject var authVM: AuthViewModel
     @State private var showImagePicker: Bool = false
@@ -34,7 +33,6 @@ struct CreateListingView: View {
                 }
                 Section("Product Description"){
                     TextField("", text: $createListingVM.productDescription)
-                        .frame(height:200)
                         .focused($selectedField, equals: Field.description)
                 }
                 Section("Quantity"){
@@ -85,6 +83,7 @@ struct CreateListingView: View {
                     Button("Save"){
                         Task{
                             await self.uploadListing()
+                           
                         }
                     }
                     Spacer()
@@ -93,6 +92,7 @@ struct CreateListingView: View {
             }
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
+                    
                       Button("Up") {
                           currentFieldIndex = (currentFieldIndex + 1) % fields.count
                           selectedField = fields[currentFieldIndex]
@@ -149,7 +149,8 @@ struct CreateListingView: View {
     }
     
     private func uploadListing()async {
-        await self.createListingVM.uploadListing(listing: ListingModel(listingId: self.listingId, sellerId: self.authVM.getCurrentUserId(), productName: self.createListingVM.productName,productDescription: self.createListingVM.productDescription, quantity: Int(self.createListingVM.quantity) ?? 0, price: self.createListingVM.price, imageUrls: [], category: self.createListingVM.selectedCategory, createdDate: Date()),imageData: self.createListingVM.productImageData)
+        await self.createListingVM.uploadListing(listing: ListingModel(listingId: self.createListingVM.listingId, sellerId: self.authVM.getCurrentUserId(), productName: self.createListingVM.productName,productDescription: self.createListingVM.productDescription, quantity: Int(self.createListingVM.quantity) ?? 0, price: self.createListingVM.price, imageUrls: [], category: self.createListingVM.selectedCategory, createdDate: Date()),imageData: self.createListingVM.productImageData)
+        self.createListingVM.resetStates()
     }
 }
 

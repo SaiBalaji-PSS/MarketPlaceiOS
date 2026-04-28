@@ -20,11 +20,14 @@ class CreateListingService: CreateListingProtocol{
                                  .document(listingId)
                                  .setData([
                                     "product_name": listing.productName,
+                                    "product_description":listing.productDescription,
+                                    "category": listing.category,
                                     "seller_id": listing.sellerId,
                                     "quantity": listing.quantity,
                                     "price": listing.price,
                                     "image_urls": listing.imageUrls,
                                     "created_date": Date()
+                                    
                                  ])
         return listingId
     }

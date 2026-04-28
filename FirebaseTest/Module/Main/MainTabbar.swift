@@ -12,13 +12,13 @@ struct MainTabbar: View {
     var body: some View {
         TabView{
             Tab("Home", systemImage: "house") {
-                Text("Home")
+                HomeView()
             }
             Tab("Sell",systemImage: "bag"){
                 CreateListingView()
             }
-            Tab("Notifications",systemImage: "heart"){
-                Text("Notification")
+            Tab("My Listings",systemImage: "shippingbox"){
+                MyListingView()
             }
             Tab("Profile",systemImage: "person"){
                ProfileView()
